@@ -51,12 +51,6 @@ export default function AuthPage() {
     setLoading(false);
   };
 
-  const fillDemo = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('password123');
-    setMode('signin');
-  };
-
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="w-full max-w-md">
@@ -162,23 +156,6 @@ export default function AuthPage() {
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
           </p>
-        </div>
-
-        {/* Demo accounts */}
-        <div className="mt-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-          <p className="text-xs font-medium text-gray-500 mb-2 text-center">Try a demo account:</p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button onClick={() => fillDemo('sarah@maplegrove.org')} className="text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary-400 transition-colors">
-              Sarah (Moderator)
-            </button>
-            <button onClick={() => fillDemo('admin@neighborhub.org')} className="text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary-400 transition-colors">
-              Admin
-            </button>
-            <button onClick={() => fillDemo('mike@maplegrove.org')} className="text-xs px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary-400 transition-colors">
-              Mike (User)
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 text-center mt-2">Password: password123</p>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">

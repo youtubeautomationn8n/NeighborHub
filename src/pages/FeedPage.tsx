@@ -69,6 +69,20 @@ export default function FeedPage() {
     if (categories.length > 0) fetchPosts();
   }, [fetchPosts, categories.length]);
 
+  // Real-time: refresh posts when changes happen
+  useEffect(() => {
+    const channel = supabase
+      .channel('feed-posts-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+        if (categories.length > 0) fetchPosts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPosts, categories.length]);
+
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(params);
     if (value === 'all' || !value) {

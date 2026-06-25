@@ -33,6 +33,14 @@ export default function EventsPage() {
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('events-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => fetchEvents())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchEvents]);
+
   const monthName = currentMonth.toLocaleString('en', { month: 'long', year: 'numeric' });
   const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);

@@ -34,42 +34,72 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      supabase
-        .from('posts')
-        .select('*, author:profiles(*), category:categories(*)')
-        .eq('hidden', false)
-        .order('likes_count', { ascending: false })
-        .limit(4)
-        .then(({ data }) => data as Post[] | null),
-      supabase
-        .from('events')
-        .select('*, organizer:profiles(*)')
-        .gte('event_date', new Date().toISOString().split('T')[0])
-        .order('event_date', { ascending: true })
-        .limit(3)
-        .then(({ data }) => data as EventItem[] | null),
-      supabase
-        .from('alerts')
-        .select('*, author:profiles(*)')
-        .eq('active', true)
-        .order('pinned', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(3)
-        .then(({ data }) => data as Alert[] | null),
-      supabase
-        .from('profiles')
-        .select('*')
-        .order('trust_score', { ascending: false })
-        .limit(4)
-        .then(({ data }) => data as Profile[] | null),
-    ]).then(([posts, events, alerts, neighbors]) => {
+    let mounted = true;
+
+    const loadData = async () => {
+      const [posts, events, alerts, neighbors] = await Promise.all([
+        supabase
+          .from('posts')
+          .select('*, author:profiles(*), category:categories(*)')
+          .eq('hidden', false)
+          .order('likes_count', { ascending: false })
+          .limit(4)
+          .then(({ data }) => data as Post[] | null),
+        supabase
+          .from('events')
+          .select('*, organizer:profiles(*)')
+          .gte('event_date', new Date().toISOString().split('T')[0])
+          .order('event_date', { ascending: true })
+          .limit(3)
+          .then(({ data }) => data as EventItem[] | null),
+        supabase
+          .from('alerts')
+          .select('*, author:profiles(*)')
+          .eq('active', true)
+          .order('pinned', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(3)
+          .then(({ data }) => data as Alert[] | null),
+        supabase
+          .from('profiles')
+          .select('*')
+          .order('trust_score', { ascending: false })
+          .limit(4)
+          .then(({ data }) => data as Profile[] | null),
+      ]);
+
+      if (!mounted) return;
       setTrendingPosts(posts || []);
       setUpcomingEvents(events || []);
       setRecentAlerts(alerts || []);
       setFeaturedNeighbors(neighbors || []);
       setLoading(false);
-    });
+    };
+
+    loadData();
+
+    // Real-time subscriptions for live updates
+    const postsChannel = supabase
+      .channel('home-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => loadData())
+      .subscribe();
+
+    const eventsChannel = supabase
+      .channel('home-events')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => loadData())
+      .subscribe();
+
+    const alertsChannel = supabase
+      .channel('home-alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => loadData())
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(postsChannel);
+      supabase.removeChannel(eventsChannel);
+      supabase.removeChannel(alertsChannel);
+    };
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {

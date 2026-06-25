@@ -42,6 +42,14 @@ export default function AlertsPage() {
 
   useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('alerts-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => fetchAlerts())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchAlerts]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <div className="mb-6">
